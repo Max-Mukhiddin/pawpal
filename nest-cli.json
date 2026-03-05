@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "apps/pawpal-api/src",
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/pawpal-api/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/pawpal-api",
+  "projects": {
+    "pawpal-api": {
+      "type": "application",
+      "root": "apps/pawpal-api",
+      "entryFile": "main",
+      "sourceRoot": "apps/pawpal-api/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/pawpal-api/tsconfig.app.json"
+      }
+    },
+    "pawpal-batch": {
+      "type": "application",
+      "root": "apps/pawpal-batch",
+      "entryFile": "main",
+      "sourceRoot": "apps/pawpal-batch/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/pawpal-batch/tsconfig.app.json"
+      }
+    }
+  }
+}
