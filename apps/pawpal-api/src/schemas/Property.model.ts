@@ -51,6 +51,11 @@ const PropertySchema = new Schema(
 			required: true,
 		},
 
+		durationMinutes: {
+			type: Number,
+			default: null,
+		},
+
 		propertyViews: {
 			type: Number,
 			default: 0,

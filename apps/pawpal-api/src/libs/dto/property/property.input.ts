@@ -44,6 +44,12 @@ export class PropertyInput {
 	@Field(() => Int)
 	propertyRooms: number;
 
+	@IsOptional()
+	@IsInt()
+	@Min(1)
+	@Field(() => Int, { nullable: true })
+	durationMinutes?: number;
+
 	@IsNotEmpty()
 	@Field(() => [String])
 	propertyImages: string[];

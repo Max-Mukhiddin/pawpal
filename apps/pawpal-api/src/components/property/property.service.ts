@@ -14,7 +14,7 @@ import { MemberService } from '../member/member.service';
 import { StatisticModifier, T } from '../../libs/types/common';
 import { ViewGroup } from '../../libs/enums/view.enum';
 import { ViewService } from '../view/view.service';
-import { PropertyStatus } from '../../libs/enums/property.enum';
+import { PropertyStatus, PropertyType } from '../../libs/enums/property.enum';
 const moment = require('moment');
 import { PropertyUpdate } from '../../libs/dto/property/property.update';
 import { lookupAuthMemberLiked, lookupMember, shapeIntoMongoObjectId } from '../../libs/config';
@@ -32,6 +32,14 @@ export class PropertyService {
 	) {}
 
 	public async createProperty(input: PropertyInput): Promise<Property> {
+		if (input.propertyType === PropertyType.SERVICE) {
+			if (input.durationMinutes == null || input.durationMinutes < 1) {
+				throw new BadRequestException('durationMinutes must be provided and >= 1 for service properties');
+			}
+		} else if (input.propertyType === PropertyType.PRODUCT) {
+			input.durationMinutes = null;
+		}
+
 		try {
 			const result = await this.propertyModel.create(input);
 
@@ -92,6 +100,14 @@ export class PropertyService {
 	}
 
 	public async updateProperty(memberId: ObjectId, input: PropertyUpdate): Promise<Property> {
+		if (input.propertyType === PropertyType.SERVICE && input.durationMinutes != null) {
+			if (input.durationMinutes < 1) {
+				throw new BadRequestException('durationMinutes must be >= 1 for service properties');
+			}
+		} else if (input.propertyType === PropertyType.PRODUCT) {
+			input.durationMinutes = null;
+		}
+
 		let { propertyStatus, soldAt, deletedAt } = input;
 		const search: T = {
 			_id: input._id,
@@ -168,7 +184,7 @@ export class PropertyService {
 		if (locationList && locationList.length) match.propertyLocation = { $in: locationList };
 		if (roomsList  && locationList.length) match.propertyRooms = { $in: roomsList };
 		if (bedsList  && locationList.length) match.propertyBeds = { $in: bedsList };
-		if (typeList  && locationList.length) match.propertyType = { $in: typeList };
+		if (typeList && typeList.length) match.propertyType = { $in: typeList };
 
 		if (pricesRange) match.propertyPrice = { $gte: pricesRange.start, $lte: pricesRange.end };
 		if (periodsRange) match.createdAt = { $gte: periodsRange.start, $lte: periodsRange.end };

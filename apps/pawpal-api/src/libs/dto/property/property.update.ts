@@ -52,6 +52,12 @@ export class PropertyUpdate {
 	propertyRooms?: number;
 
 	@IsOptional()
+	@IsInt()
+	@Min(1)
+	@Field(() => Int, { nullable: true })
+	durationMinutes?: number;
+
+	@IsOptional()
 	@Field(() => [String], { nullable: true })
 	propertyImages?: string[];
 
