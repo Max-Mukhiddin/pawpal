@@ -10,9 +10,9 @@ export class BookingInput {
 	@Field(() => String)
 	propertyId: ObjectId;
 
-	@IsNotEmpty()
-	@Field(() => String)
-	agentId: ObjectId;
+	@IsOptional()
+	@Field(() => String, { nullable: true })
+	agentId?: ObjectId;
 
 	@IsOptional()
 	@Field(() => String, { nullable: true })
@@ -76,4 +76,3 @@ export class BookingsInquiry {
 	@Field(() => BISearch)
 	search: BISearch;
 }
-

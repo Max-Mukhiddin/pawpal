@@ -18,18 +18,24 @@ export class BookingService {
 	) {}
 
 	public async createBooking(memberId: ObjectId, input: BookingInput): Promise<Booking> {
-		// if customerId is not provided, treat memberId as customerId
+		const property = await this.propertyModel.findById(input.propertyId).lean().exec();
+
+		if (!property) {
+			throw new InternalServerErrorException(Message.NO_DATA_FOUND);
+		}
+
+		if (property.propertyType !== PropertyType.SERVICE) {
+			throw new BadRequestException('Only service properties can be booked');
+		}
+
+		input.agentId = property.memberId;
+
 		if (!input.customerId && memberId) {
 			input.customerId = memberId;
 		}
 
-		// validate propertyType == SERVICE
-		const property = await this.propertyModel.findById(input.propertyId).lean().exec();
-		if (!property) {
-			throw new InternalServerErrorException(Message.NO_DATA_FOUND);
-		}
-		if (property.propertyType !== PropertyType.SERVICE) {
-			throw new BadRequestException('Only service properties can be booked');
+		if (!input.bookingStatus) {
+			input.bookingStatus = BookingStatus.REQUESTED;
 		}
 
 		try {
@@ -129,4 +135,3 @@ export class BookingService {
 		if (bookingStatus) match.bookingStatus = bookingStatus;
 	}
 }
-

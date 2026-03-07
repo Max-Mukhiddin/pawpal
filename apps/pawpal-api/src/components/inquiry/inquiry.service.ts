@@ -7,14 +7,21 @@ import { InquiryUpdateStatus } from '../../libs/dto/inquiry/inquiry.update';
 import { InquiryStatus } from '../../libs/enums/inquiry.enum';
 import { Direction, Message } from '../../libs/enums/common.enum';
 import { T } from '../../libs/types/common';
-import { lookupMember, lookupProperty } from '../../libs/config';
+import { Property } from '../../libs/dto/property/property';
 
 @Injectable()
 export class InquiryService {
-	constructor(@InjectModel('Inquiry') private readonly inquiryModel: Model<Inquiry>) {}
+	constructor(
+		@InjectModel('Inquiry') private readonly inquiryModel: Model<Inquiry>,
+		@InjectModel('Property') private readonly propertyModel: Model<Property>,
+	) {}
 
 	public async createInquiry(memberId: ObjectId, input: InquiryInput): Promise<Inquiry> {
-		// if customerId is not provided, treat memberId as customerId
+		const property = await this.propertyModel.findById(input.propertyId).exec();
+		if (!property) throw new BadRequestException(Message.NO_DATA_FOUND);
+
+		input.agentId = property.memberId;
+
 		if (!input.customerId && memberId) {
 			input.customerId = memberId;
 		}
@@ -45,9 +52,33 @@ export class InquiryService {
 						list: [
 							{ $skip: (input.page - 1) * input.limit },
 							{ $limit: input.limit },
-							lookupMember('agentId', 'agentData'),
-							lookupMember('customerId', 'customerData'),
-							lookupProperty('propertyId', 'propertyData'),
+							{
+								$lookup: {
+									from: 'members',
+									localField: 'agentId',
+									foreignField: '_id',
+									as: 'agentData',
+								},
+							},
+							{ $unwind: { path: '$agentData', preserveNullAndEmptyArrays: true } },
+							{
+								$lookup: {
+									from: 'members',
+									localField: 'customerId',
+									foreignField: '_id',
+									as: 'customerData',
+								},
+							},
+							{ $unwind: { path: '$customerData', preserveNullAndEmptyArrays: true } },
+							{
+								$lookup: {
+									from: 'properties',
+									localField: 'propertyId',
+									foreignField: '_id',
+									as: 'propertyData',
+								},
+							},
+							{ $unwind: { path: '$propertyData', preserveNullAndEmptyArrays: true } },
 						],
 						metaCounter: [{ $count: 'total' }],
 					},
@@ -77,9 +108,33 @@ export class InquiryService {
 						list: [
 							{ $skip: (input.page - 1) * input.limit },
 							{ $limit: input.limit },
-							lookupMember('agentId', 'agentData'),
-							lookupMember('customerId', 'customerData'),
-							lookupProperty('propertyId', 'propertyData'),
+							{
+								$lookup: {
+									from: 'members',
+									localField: 'agentId',
+									foreignField: '_id',
+									as: 'agentData',
+								},
+							},
+							{ $unwind: { path: '$agentData', preserveNullAndEmptyArrays: true } },
+							{
+								$lookup: {
+									from: 'members',
+									localField: 'customerId',
+									foreignField: '_id',
+									as: 'customerData',
+								},
+							},
+							{ $unwind: { path: '$customerData', preserveNullAndEmptyArrays: true } },
+							{
+								$lookup: {
+									from: 'properties',
+									localField: 'propertyId',
+									foreignField: '_id',
+									as: 'propertyData',
+								},
+							},
+							{ $unwind: { path: '$propertyData', preserveNullAndEmptyArrays: true } },
 						],
 						metaCounter: [{ $count: 'total' }],
 					},
@@ -120,11 +175,11 @@ export class InquiryService {
 	}
 
 	private shapeMatchQuery(match: T, input: InquiriesInquiry): void {
-		const { propertyId, customerId, inquiryStatus } = input.search;
+		const { propertyId, customerId, agentId, inquiryStatus } = input.search;
 
+		if (agentId) match.agentId = agentId;
 		if (propertyId) match.propertyId = propertyId;
 		if (customerId) match.customerId = customerId;
 		if (inquiryStatus) match.inquiryStatus = inquiryStatus;
 	}
 }
-

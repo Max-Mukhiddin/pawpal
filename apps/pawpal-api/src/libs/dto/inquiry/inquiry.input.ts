@@ -1,9 +1,8 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
-import { IsEmail, IsIn, IsNotEmpty, IsOptional, Length, Min } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, Length, Min } from 'class-validator';
 import { ObjectId } from 'mongoose';
 import { InquiryStatus } from '../../enums/inquiry.enum';
 import { Direction } from '../../enums/common.enum';
-import { availableInquirySorts } from '../../config';
 
 @InputType()
 export class InquiryInput {
@@ -11,9 +10,9 @@ export class InquiryInput {
 	@Field(() => String)
 	propertyId: ObjectId;
 
-	@IsNotEmpty()
-	@Field(() => String)
-	agentId: ObjectId;
+	@IsOptional()
+	@Field(() => String, { nullable: true })
+	agentId?: ObjectId;
 
 	@IsOptional()
 	@Field(() => String, { nullable: true })
@@ -76,7 +75,6 @@ export class InquiriesInquiry {
 	limit: number;
 
 	@IsOptional()
-	@IsIn(availableInquirySorts)
 	@Field(() => String, { nullable: true })
 	sort?: string;
 
@@ -88,4 +86,3 @@ export class InquiriesInquiry {
 	@Field(() => IISearch)
 	search: IISearch;
 }
-
