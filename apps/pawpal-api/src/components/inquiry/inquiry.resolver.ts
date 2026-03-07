@@ -8,6 +8,9 @@ import { AuthGuard } from '../auth/guards/auth.guard';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import { ObjectId } from 'mongoose';
 import { shapeIntoMongoObjectId } from '../../libs/config';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { MemberType } from '../../libs/enums/member.enum';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @Resolver()
 export class InquiryResolver {
@@ -21,8 +24,6 @@ export class InquiryResolver {
 	): Promise<Inquiry> {
 		console.log('Mutation: createInquiry');
 		input.propertyId = shapeIntoMongoObjectId(input.propertyId);
-		input.agentId = shapeIntoMongoObjectId(input.agentId);
-		if (input.customerId) input.customerId = shapeIntoMongoObjectId(input.customerId);
 		return await this.inquiryService.createInquiry(memberId, input);
 	}
 
@@ -35,10 +36,12 @@ export class InquiryResolver {
 		console.log('Query: getMyInquiries');
 		if (input.search.propertyId) input.search.propertyId = shapeIntoMongoObjectId(input.search.propertyId);
 		if (input.search.customerId) input.search.customerId = shapeIntoMongoObjectId(input.search.customerId);
+		if (input.search.agentId) input.search.agentId = shapeIntoMongoObjectId(input.search.agentId);
 		return await this.inquiryService.getMyInquiries(memberId, input);
 	}
 
-	@UseGuards(AuthGuard)
+	@Roles(MemberType.AGENT)
+	@UseGuards(RolesGuard)
 	@Query(() => Inquiries)
 	public async getAgentInquiries(
 		@Args('input') input: InquiriesInquiry,
@@ -47,10 +50,12 @@ export class InquiryResolver {
 		console.log('Query: getAgentInquiries');
 		if (input.search.propertyId) input.search.propertyId = shapeIntoMongoObjectId(input.search.propertyId);
 		if (input.search.customerId) input.search.customerId = shapeIntoMongoObjectId(input.search.customerId);
+		if (input.search.agentId) input.search.agentId = shapeIntoMongoObjectId(input.search.agentId);
 		return await this.inquiryService.getAgentInquiries(memberId, input);
 	}
 
-	@UseGuards(AuthGuard)
+	@Roles(MemberType.AGENT)
+	@UseGuards(RolesGuard)
 	@Mutation(() => Inquiry)
 	public async updateInquiryStatus(
 		@Args('input') input: InquiryUpdateStatus,
@@ -61,4 +66,3 @@ export class InquiryResolver {
 		return await this.inquiryService.updateInquiryStatus(memberId, input);
 	}
 }
-

@@ -24,8 +24,6 @@ export class BookingResolver {
 	): Promise<Booking> {
 		console.log('Mutation: createBooking');
 		input.propertyId = shapeIntoMongoObjectId(input.propertyId);
-		input.agentId = shapeIntoMongoObjectId(input.agentId);
-		if (input.customerId) input.customerId = shapeIntoMongoObjectId(input.customerId);
 		return await this.bookingService.createBooking(memberId, input);
 	}
 
@@ -38,10 +36,12 @@ export class BookingResolver {
 		console.log('Query: getMyBookings');
 		if (input.search.propertyId) input.search.propertyId = shapeIntoMongoObjectId(input.search.propertyId);
 		if (input.search.customerId) input.search.customerId = shapeIntoMongoObjectId(input.search.customerId);
+		if (input.search.agentId) input.search.agentId = shapeIntoMongoObjectId(input.search.agentId);
 		return await this.bookingService.getMyBookings(memberId, input);
 	}
 
-	@UseGuards(AuthGuard)
+	@Roles(MemberType.AGENT)
+	@UseGuards(RolesGuard)
 	@Query(() => Bookings)
 	public async getAgentBookings(
 		@Args('input') input: BookingsInquiry,
@@ -50,6 +50,7 @@ export class BookingResolver {
 		console.log('Query: getAgentBookings');
 		if (input.search.propertyId) input.search.propertyId = shapeIntoMongoObjectId(input.search.propertyId);
 		if (input.search.customerId) input.search.customerId = shapeIntoMongoObjectId(input.search.customerId);
+		if (input.search.agentId) input.search.agentId = shapeIntoMongoObjectId(input.search.agentId);
 		return await this.bookingService.getAgentBookings(memberId, input);
 	}
 
@@ -65,4 +66,3 @@ export class BookingResolver {
 		return await this.bookingService.updateBookingStatusByAgent(memberId, input);
 	}
 }
-
