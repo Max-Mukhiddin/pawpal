@@ -60,6 +60,9 @@ export class Property {
 	@Field(() => Boolean)
 	propertyRent: boolean;
 
+	@Field(() => Int, { nullable: true })
+	durationMinutes?: number;
+
 	@Field(() => String)
 	memberId: ObjectId;
 

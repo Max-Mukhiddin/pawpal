@@ -1,5 +1,5 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
-import { IsDateString, IsNotEmpty, IsOptional, Length, Min } from 'class-validator';
+import { IsDate, IsNotEmpty, IsOptional, Length, Min } from 'class-validator';
 import { ObjectId } from 'mongoose';
 import { BookingStatus } from '../../enums/booking.enum';
 import { Direction } from '../../enums/common.enum';
@@ -19,9 +19,9 @@ export class BookingInput {
 	customerId?: ObjectId;
 
 	@IsNotEmpty()
-	@IsDateString()
-	@Field(() => Date)
-	dateTime: Date;
+@IsDate()
+@Field(() => Date)
+dateTime: Date;
 
 	@IsOptional()
 	@Length(1, 500)

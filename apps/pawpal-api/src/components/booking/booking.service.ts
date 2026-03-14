@@ -18,34 +18,58 @@ export class BookingService {
 	) {}
 
 	public async createBooking(memberId: ObjectId, input: BookingInput): Promise<Booking> {
-		const property = await this.propertyModel.findById(input.propertyId).lean().exec();
+	const property = await this.propertyModel.findById(input.propertyId).lean().exec();
 
-		if (!property) {
-			throw new InternalServerErrorException(Message.NO_DATA_FOUND);
-		}
-
-		if (property.propertyType !== PropertyType.SERVICE) {
-			throw new BadRequestException('Only service properties can be booked');
-		}
-
-		input.agentId = property.memberId;
-
-		if (!input.customerId && memberId) {
-			input.customerId = memberId;
-		}
-
-		if (!input.bookingStatus) {
-			input.bookingStatus = BookingStatus.REQUESTED;
-		}
-
-		try {
-			const result = await this.bookingModel.create(input);
-			return result;
-		} catch (err) {
-			console.log('Error, BookingService.createBooking:', err);
-			throw new BadRequestException(Message.CREATE_FAILED);
-		}
+	if (!property) {
+		throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 	}
+
+	if (property.propertyType !== PropertyType.SERVICE) {
+		throw new BadRequestException('Only service properties can be booked');
+	}
+
+	input.agentId = property.memberId;
+
+	if (!input.customerId && memberId) {
+		input.customerId = memberId;
+	}
+
+	if (!input.bookingStatus) {
+		input.bookingStatus = BookingStatus.REQUESTED;
+	}
+
+	const bookingDate = new Date(input.dateTime);
+
+	const startOfDay = new Date(bookingDate);
+	startOfDay.setHours(0, 0, 0, 0);
+
+	const endOfDay = new Date(bookingDate);
+	endOfDay.setHours(23, 59, 59, 999);
+
+	const existingBooking = await this.bookingModel.findOne({
+		propertyId: input.propertyId,
+		customerId: input.customerId,
+		dateTime: {
+			$gte: startOfDay,
+			$lte: endOfDay,
+		},
+		bookingStatus: {
+			$in: [BookingStatus.REQUESTED, BookingStatus.CONFIRMED],
+		},
+	}).exec();
+
+	if (existingBooking) {
+		throw new BadRequestException('You already booked this service for this day');
+	}
+
+	try {
+		const result = await this.bookingModel.create(input);
+		return result;
+	} catch (err) {
+		console.log('Error, BookingService.createBooking:', err);
+		throw new BadRequestException(Message.CREATE_FAILED);
+	}
+}
 
 	public async getMyBookings(memberId: ObjectId, input: BookingsInquiry): Promise<Bookings> {
 		const match: T = {
@@ -114,6 +138,30 @@ export class BookingService {
 				search,
 				{
 					bookingStatus: input.bookingStatus,
+				},
+				{
+					new: true,
+				},
+			)
+			.exec();
+
+		if (!result) throw new InternalServerErrorException(Message.UPDATE_FAILED);
+
+		return result;
+	}
+
+		public async cancelMyBooking(memberId: ObjectId, bookingId: ObjectId): Promise<Booking> {
+		const search: T = {
+			_id: bookingId,
+			customerId: memberId,
+			bookingStatus: { $in: [BookingStatus.REQUESTED, BookingStatus.CONFIRMED] },
+		};
+
+		const result = await this.bookingModel
+			.findOneAndUpdate(
+				search,
+				{
+					bookingStatus: BookingStatus.CANCELLED,
 				},
 				{
 					new: true,

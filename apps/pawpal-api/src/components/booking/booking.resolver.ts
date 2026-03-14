@@ -65,4 +65,15 @@ export class BookingResolver {
 		input._id = shapeIntoMongoObjectId(input._id);
 		return await this.bookingService.updateBookingStatusByAgent(memberId, input);
 	}
+
+		@UseGuards(AuthGuard)
+	@Mutation(() => Booking)
+	public async cancelMyBooking(
+		@Args('bookingId') input: string,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<Booking> {
+		console.log('Mutation: cancelMyBooking');
+		const bookingId = shapeIntoMongoObjectId(input);
+		return await this.bookingService.cancelMyBooking(memberId, bookingId);
+	}
 }
