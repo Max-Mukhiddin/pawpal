@@ -22,7 +22,7 @@ import { SocketModule } from './socket/socket.module';
 				const graphqlFormattedError = {
 					code: error?.extensions.code,
 					message:
-						error?.extensions?.exception?.responce?.message || error?.extensions?.responce?.message || error?.message,
+						error?.extensions?.exception?.response?.message || error?.extensions?.response?.message || error?.message,
 				};
 				console.log('GRAPHQL GLOBAL ERR:', graphqlFormattedError);
 				return graphqlFormattedError;
