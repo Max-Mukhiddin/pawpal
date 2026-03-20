@@ -1,4 +1,4 @@
-import { Injectable, Controller } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { Member } from '../../libs/dto/member/member';
 import { JwtService } from '@nestjs/jwt';

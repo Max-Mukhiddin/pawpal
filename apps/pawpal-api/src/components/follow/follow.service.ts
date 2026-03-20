@@ -2,9 +2,6 @@ import { BadRequestException, Injectable, InternalServerErrorException } from '@
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, ObjectId } from 'mongoose';
 import { Follower, Followers, Following, Followings } from '../../libs/dto/follow/follow';
-import { AuthService } from '../auth/auth.service';
-import { ViewService } from '../view/view.service';
-import { LikeService } from '../like/like.service';
 import { MemberService } from '../member/member.service';
 import { Direction, Message } from '../../libs/enums/common.enum';
 import {

@@ -1,5 +1,5 @@
 import { Controller, Get, Logger } from '@nestjs/common';
-import { Cron, Interval, Timeout } from '@nestjs/schedule';
+import { Cron, Timeout } from '@nestjs/schedule';
 import { BatchService } from './batch.service';
 import { BATCH_ROLLBACK, BATCH_TOP_AGENTS, BATCH_TOP_PROPERTIES } from './lib/config';
 
@@ -46,14 +46,6 @@ export class BatchController {
 			this.logger.error(err);
 		}
 	}
-	/* 
-
-	@Interval(1000)
-	handleInterval() {
-    this.logger.debug('INTERVAL TEST')
-  }
-    */
-
 	@Get()
 	getHello(): string {
 		return this.batchService.getHello();

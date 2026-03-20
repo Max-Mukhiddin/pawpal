@@ -92,9 +92,8 @@ export class CommentService {
 					$facet: {
 						list: [
 							{ $skip: (input.page - 1) * input.limit },
-							{ $limit: input.limit },
-							// meLiked
-							lookupMember,
+						{ $limit: input.limit },
+						lookupMember,
 							{ $unwind: '$memberData' },
 						],
 						metaCounter: [{ $count: 'total' }],
