@@ -23,7 +23,7 @@ export class InquiryResolver {
 		@AuthMember('_id') memberId: ObjectId,
 	): Promise<Inquiry> {
 		console.log('Mutation: createInquiry');
-		input.propertyId = shapeIntoMongoObjectId(input.propertyId);
+		input.listingId = shapeIntoMongoObjectId(input.listingId);
 		return await this.inquiryService.createInquiry(memberId, input);
 	}
 
@@ -34,7 +34,7 @@ export class InquiryResolver {
 		@AuthMember('_id') memberId: ObjectId,
 	): Promise<Inquiries> {
 		console.log('Query: getMyInquiries');
-		if (input.search.propertyId) input.search.propertyId = shapeIntoMongoObjectId(input.search.propertyId);
+		if (input.search.listingId) input.search.listingId = shapeIntoMongoObjectId(input.search.listingId);
 		if (input.search.customerId) input.search.customerId = shapeIntoMongoObjectId(input.search.customerId);
 		if (input.search.agentId) input.search.agentId = shapeIntoMongoObjectId(input.search.agentId);
 		return await this.inquiryService.getMyInquiries(memberId, input);
@@ -48,7 +48,7 @@ export class InquiryResolver {
 		@AuthMember('_id') memberId: ObjectId,
 	): Promise<Inquiries> {
 		console.log('Query: getAgentInquiries');
-		if (input.search.propertyId) input.search.propertyId = shapeIntoMongoObjectId(input.search.propertyId);
+		if (input.search.listingId) input.search.listingId = shapeIntoMongoObjectId(input.search.listingId);
 		if (input.search.customerId) input.search.customerId = shapeIntoMongoObjectId(input.search.customerId);
 		if (input.search.agentId) input.search.agentId = shapeIntoMongoObjectId(input.search.agentId);
 		return await this.inquiryService.getAgentInquiries(memberId, input);

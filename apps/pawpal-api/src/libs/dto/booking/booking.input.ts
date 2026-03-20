@@ -8,7 +8,7 @@ import { Direction } from '../../enums/common.enum';
 export class BookingInput {
 	@IsNotEmpty()
 	@Field(() => String)
-	propertyId: ObjectId;
+	listingId: ObjectId;
 
 	@IsOptional()
 	@Field(() => String, { nullable: true })
@@ -37,7 +37,7 @@ dateTime: Date;
 class BISearch {
 	@IsOptional()
 	@Field(() => String, { nullable: true })
-	propertyId?: ObjectId;
+	listingId?: ObjectId;
 
 	@IsOptional()
 	@Field(() => String, { nullable: true })

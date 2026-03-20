@@ -8,7 +8,7 @@ import { Direction } from '../../enums/common.enum';
 export class InquiryInput {
 	@IsNotEmpty()
 	@Field(() => String)
-	propertyId: ObjectId;
+	listingId: ObjectId;
 
 	@IsOptional()
 	@Field(() => String, { nullable: true })
@@ -47,7 +47,7 @@ export class InquiryInput {
 class IISearch {
 	@IsOptional()
 	@Field(() => String, { nullable: true })
-	propertyId?: ObjectId;
+	listingId?: ObjectId;
 
 	@IsOptional()
 	@Field(() => String, { nullable: true })

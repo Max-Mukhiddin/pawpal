@@ -4,7 +4,7 @@ import BookingSchema from '../../schemas/Booking.model';
 import { BookingResolver } from './booking.resolver';
 import { BookingService } from './booking.service';
 import { AuthModule } from '../auth/auth.module';
-import PropertySchema from '../../schemas/Property.model';
+import ListingSchema from '../../schemas/Listing.model';
 
 @Module({
 	imports: [
@@ -14,8 +14,8 @@ import PropertySchema from '../../schemas/Property.model';
 				schema: BookingSchema,
 			},
 			{
-				name: 'Property',
-				schema: PropertySchema,
+				name: 'Listing',
+				schema: ListingSchema,
 			},
 		]),
 		AuthModule,

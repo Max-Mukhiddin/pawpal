@@ -3,10 +3,10 @@ import { BookingStatus } from '../libs/enums/booking.enum';
 
 const BookingSchema = new Schema(
 	{
-		propertyId: {
+		listingId: {
 			type: Schema.Types.ObjectId,
 			required: true,
-			ref: 'Property',
+			ref: 'Listing',
 		},
 
 		agentId: {

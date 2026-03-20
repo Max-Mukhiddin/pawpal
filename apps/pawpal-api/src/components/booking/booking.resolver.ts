@@ -23,7 +23,7 @@ export class BookingResolver {
 		@AuthMember('_id') memberId: ObjectId,
 	): Promise<Booking> {
 		console.log('Mutation: createBooking');
-		input.propertyId = shapeIntoMongoObjectId(input.propertyId);
+		input.listingId = shapeIntoMongoObjectId(input.listingId);
 		return await this.bookingService.createBooking(memberId, input);
 	}
 
@@ -34,7 +34,7 @@ export class BookingResolver {
 		@AuthMember('_id') memberId: ObjectId,
 	): Promise<Bookings> {
 		console.log('Query: getMyBookings');
-		if (input.search.propertyId) input.search.propertyId = shapeIntoMongoObjectId(input.search.propertyId);
+		if (input.search.listingId) input.search.listingId = shapeIntoMongoObjectId(input.search.listingId);
 		if (input.search.customerId) input.search.customerId = shapeIntoMongoObjectId(input.search.customerId);
 		if (input.search.agentId) input.search.agentId = shapeIntoMongoObjectId(input.search.agentId);
 		return await this.bookingService.getMyBookings(memberId, input);
@@ -48,7 +48,7 @@ export class BookingResolver {
 		@AuthMember('_id') memberId: ObjectId,
 	): Promise<Bookings> {
 		console.log('Query: getAgentBookings');
-		if (input.search.propertyId) input.search.propertyId = shapeIntoMongoObjectId(input.search.propertyId);
+		if (input.search.listingId) input.search.listingId = shapeIntoMongoObjectId(input.search.listingId);
 		if (input.search.customerId) input.search.customerId = shapeIntoMongoObjectId(input.search.customerId);
 		if (input.search.agentId) input.search.agentId = shapeIntoMongoObjectId(input.search.agentId);
 		return await this.bookingService.getAgentBookings(memberId, input);

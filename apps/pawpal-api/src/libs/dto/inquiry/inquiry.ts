@@ -2,7 +2,7 @@ import { Field, Int, ObjectType } from '@nestjs/graphql';
 import type { ObjectId } from 'mongoose';
 import { InquiryStatus } from '../../enums/inquiry.enum';
 import { Member, TotalCounter } from '../member/member';
-import { Property } from '../property/property';
+import { Listing } from '../listing/listing';
 
 @ObjectType()
 export class Inquiry {
@@ -10,7 +10,7 @@ export class Inquiry {
 	_id: ObjectId;
 
 	@Field(() => String)
-	propertyId: ObjectId;
+	listingId: ObjectId;
 
 	@Field(() => String)
 	agentId: ObjectId;
@@ -47,8 +47,8 @@ export class Inquiry {
 	@Field(() => Member, { nullable: true })
 	customerData?: Member;
 
-	@Field(() => Property, { nullable: true })
-	propertyData?: Property;
+	@Field(() => Listing, { nullable: true })
+	listingData?: Listing;
 }
 
 @ObjectType()

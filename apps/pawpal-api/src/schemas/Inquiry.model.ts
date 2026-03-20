@@ -3,10 +3,10 @@ import { InquiryStatus } from '../libs/enums/inquiry.enum';
 
 const InquirySchema = new Schema(
 	{
-		propertyId: {
+		listingId: {
 			type: Schema.Types.ObjectId,
 			required: true,
-			ref: 'Property',
+			ref: 'Listing',
 		},
 
 		agentId: {

@@ -7,28 +7,28 @@ import { BookingUpdateStatus } from '../../libs/dto/booking/booking.update';
 import { BookingStatus } from '../../libs/enums/booking.enum';
 import { Direction, Message } from '../../libs/enums/common.enum';
 import { T } from '../../libs/types/common';
-import { Property } from '../../libs/dto/property/property';
-import { PropertyType } from '../../libs/enums/property.enum';
+import { Listing } from '../../libs/dto/listing/listing';
+import { ListingType } from '../../libs/enums/listing.enum';
 
 @Injectable()
 export class BookingService {
 	constructor(
 		@InjectModel('Booking') private readonly bookingModel: Model<Booking>,
-		@InjectModel('Property') private readonly propertyModel: Model<Property>,
+		@InjectModel('Listing') private readonly listingModel: Model<Listing>,
 	) {}
 
 	public async createBooking(memberId: ObjectId, input: BookingInput): Promise<Booking> {
-	const property = await this.propertyModel.findById(input.propertyId).lean().exec();
+	const listing = await this.listingModel.findById(input.listingId).lean().exec();
 
-	if (!property) {
+	if (!listing) {
 		throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 	}
 
-	if (property.propertyType !== PropertyType.SERVICE) {
-		throw new BadRequestException('Only service properties can be booked');
+	if (listing.listingType !== ListingType.SERVICE) {
+		throw new BadRequestException('Only service listings can be booked');
 	}
 
-	input.agentId = property.memberId;
+	input.agentId = listing.memberId;
 
 	if (!input.customerId && memberId) {
 		input.customerId = memberId;
@@ -47,7 +47,7 @@ export class BookingService {
 	endOfDay.setHours(23, 59, 59, 999);
 
 	const existingBooking = await this.bookingModel.findOne({
-		propertyId: input.propertyId,
+		listingId: input.listingId,
 		customerId: input.customerId,
 		dateTime: {
 			$gte: startOfDay,
@@ -175,9 +175,9 @@ export class BookingService {
 	}
 
 	private shapeMatchQuery(match: T, input: BookingsInquiry): void {
-		const { propertyId, agentId, customerId, bookingStatus } = input.search;
+		const { listingId, agentId, customerId, bookingStatus } = input.search;
 
-		if (propertyId) match.propertyId = propertyId;
+		if (listingId) match.listingId = listingId;
 		if (agentId) match.agentId = agentId;
 		if (customerId) match.customerId = customerId;
 		if (bookingStatus) match.bookingStatus = bookingStatus;

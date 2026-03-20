@@ -9,7 +9,7 @@ export class Booking {
 	_id: ObjectId;
 
 	@Field(() => String)
-	propertyId: ObjectId;
+	listingId: ObjectId;
 
 	@Field(() => String)
 	agentId: ObjectId;

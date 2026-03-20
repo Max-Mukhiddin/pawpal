@@ -7,20 +7,20 @@ import { InquiryUpdateStatus } from '../../libs/dto/inquiry/inquiry.update';
 import { InquiryStatus } from '../../libs/enums/inquiry.enum';
 import { Direction, Message } from '../../libs/enums/common.enum';
 import { T } from '../../libs/types/common';
-import { Property } from '../../libs/dto/property/property';
+import { Listing } from '../../libs/dto/listing/listing';
 
 @Injectable()
 export class InquiryService {
 	constructor(
 		@InjectModel('Inquiry') private readonly inquiryModel: Model<Inquiry>,
-		@InjectModel('Property') private readonly propertyModel: Model<Property>,
+		@InjectModel('Listing') private readonly listingModel: Model<Listing>,
 	) {}
 
 	public async createInquiry(memberId: ObjectId, input: InquiryInput): Promise<Inquiry> {
-		const property = await this.propertyModel.findById(input.propertyId).exec();
-		if (!property) throw new BadRequestException(Message.NO_DATA_FOUND);
+		const listing = await this.listingModel.findById(input.listingId).exec();
+		if (!listing) throw new BadRequestException(Message.NO_DATA_FOUND);
 
-		input.agentId = property.memberId;
+		input.agentId = listing.memberId;
 
 		if (!input.customerId && memberId) {
 			input.customerId = memberId;
@@ -72,13 +72,13 @@ export class InquiryService {
 							{ $unwind: { path: '$customerData', preserveNullAndEmptyArrays: true } },
 							{
 								$lookup: {
-									from: 'properties',
-									localField: 'propertyId',
+									from: 'listings',
+									localField: 'listingId',
 									foreignField: '_id',
-									as: 'propertyData',
+									as: 'listingData',
 								},
 							},
-							{ $unwind: { path: '$propertyData', preserveNullAndEmptyArrays: true } },
+							{ $unwind: { path: '$listingData', preserveNullAndEmptyArrays: true } },
 						],
 						metaCounter: [{ $count: 'total' }],
 					},
@@ -128,13 +128,13 @@ export class InquiryService {
 							{ $unwind: { path: '$customerData', preserveNullAndEmptyArrays: true } },
 							{
 								$lookup: {
-									from: 'properties',
-									localField: 'propertyId',
+									from: 'listings',
+									localField: 'listingId',
 									foreignField: '_id',
-									as: 'propertyData',
+									as: 'listingData',
 								},
 							},
-							{ $unwind: { path: '$propertyData', preserveNullAndEmptyArrays: true } },
+							{ $unwind: { path: '$listingData', preserveNullAndEmptyArrays: true } },
 						],
 						metaCounter: [{ $count: 'total' }],
 					},
@@ -175,10 +175,10 @@ export class InquiryService {
 	}
 
 	private shapeMatchQuery(match: T, input: InquiriesInquiry): void {
-		const { propertyId, customerId, agentId, inquiryStatus } = input.search;
+		const { listingId, customerId, agentId, inquiryStatus } = input.search;
 
 		if (agentId) match.agentId = agentId;
-		if (propertyId) match.propertyId = propertyId;
+		if (listingId) match.listingId = listingId;
 		if (customerId) match.customerId = customerId;
 		if (inquiryStatus) match.inquiryStatus = inquiryStatus;
 	}
