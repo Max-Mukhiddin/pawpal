@@ -85,7 +85,37 @@ export class BookingService {
 				{ $sort: sort },
 				{
 					$facet: {
-						list: [{ $skip: (input.page - 1) * input.limit }, { $limit: input.limit }],
+						list: [
+							{ $skip: (input.page - 1) * input.limit },
+							{ $limit: input.limit },
+							{
+								$lookup: {
+									from: 'members',
+									localField: 'agentId',
+									foreignField: '_id',
+									as: 'agentData',
+								},
+							},
+							{ $unwind: { path: '$agentData', preserveNullAndEmptyArrays: true } },
+							{
+								$lookup: {
+									from: 'members',
+									localField: 'customerId',
+									foreignField: '_id',
+									as: 'customerData',
+								},
+							},
+							{ $unwind: { path: '$customerData', preserveNullAndEmptyArrays: true } },
+							{
+								$lookup: {
+									from: 'listings',
+									localField: 'listingId',
+									foreignField: '_id',
+									as: 'listingData',
+								},
+							},
+							{ $unwind: { path: '$listingData', preserveNullAndEmptyArrays: true } },
+						],
 						metaCounter: [{ $count: 'total' }],
 					},
 				},
@@ -111,7 +141,37 @@ export class BookingService {
 				{ $sort: sort },
 				{
 					$facet: {
-						list: [{ $skip: (input.page - 1) * input.limit }, { $limit: input.limit }],
+						list: [
+							{ $skip: (input.page - 1) * input.limit },
+							{ $limit: input.limit },
+							{
+								$lookup: {
+									from: 'members',
+									localField: 'agentId',
+									foreignField: '_id',
+									as: 'agentData',
+								},
+							},
+							{ $unwind: { path: '$agentData', preserveNullAndEmptyArrays: true } },
+							{
+								$lookup: {
+									from: 'members',
+									localField: 'customerId',
+									foreignField: '_id',
+									as: 'customerData',
+								},
+							},
+							{ $unwind: { path: '$customerData', preserveNullAndEmptyArrays: true } },
+							{
+								$lookup: {
+									from: 'listings',
+									localField: 'listingId',
+									foreignField: '_id',
+									as: 'listingData',
+								},
+							},
+							{ $unwind: { path: '$listingData', preserveNullAndEmptyArrays: true } },
+						],
 						metaCounter: [{ $count: 'total' }],
 					},
 				},
