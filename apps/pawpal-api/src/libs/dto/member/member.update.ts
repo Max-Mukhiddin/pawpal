@@ -14,6 +14,10 @@ export class MemberUpdate {
 	memberType?: MemberType;
 
 	@IsOptional()
+	@Field(() => Boolean, { nullable: true })
+	isPendingSpecialist?: boolean;
+
+	@IsOptional()
 	@Field(() => MemberStatus, { nullable: true })
 	memberStatus?: MemberStatus;
 
@@ -22,7 +26,7 @@ export class MemberUpdate {
 	memberPhone?: string;
 
 	@IsOptional()
-	@Length(3, 12)
+	@Length(3, 16)
 	@Field(() => String, { nullable: true })
 	memberNick?: string;
 

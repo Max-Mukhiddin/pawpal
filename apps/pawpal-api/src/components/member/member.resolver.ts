@@ -13,7 +13,7 @@ import { MemberUpdate } from '../../libs/dto/member/member.update';
 import { getSerialForImage, shapeIntoMongoObjectId, validMimeTypes } from '../../libs/config';
 import { WithoutGuard } from '../auth/guards/without.guard';
 import { GraphQLUpload, FileUpload } from 'graphql-upload';
-import { createWriteStream } from 'fs';
+import * as fs from 'fs';
 import { Message } from '../../libs/enums/common.enum';
 
 @Resolver()
@@ -127,13 +127,17 @@ export class MemberResolver {
 
 		const imageName = getSerialForImage(filename);
 		const url = `uploads/${target}/${imageName}`;
+		const dir = `uploads/${target}`;
+		if (!fs.existsSync(dir)) {
+			fs.mkdirSync(dir, { recursive: true });
+		}
 		const stream = createReadStream();
 
 		const result = await new Promise((resolve, reject) => {
 			stream
-				.pipe(createWriteStream(url))
+				.pipe(fs.createWriteStream(url))
 				.on('finish', async () => resolve(true))
-				.on('error', () => reject(false));
+				.on('error', (err) => reject(new Error(err?.message || 'Upload failed')));
 		});
 		if (!result) throw new InternalServerErrorException(Message.UPLOAD_FAILED);
 
@@ -149,6 +153,11 @@ export class MemberResolver {
 	): Promise<string[]> {
 		console.log('Mutation: imagesUploader');
 
+		const dir = `uploads/${target}`;
+		if (!fs.existsSync(dir)) {
+			fs.mkdirSync(dir, { recursive: true });
+		}
+
 		const uploadedImages = [];
 		const promisedList = files.map(async (img: Promise<FileUpload>, index: number): Promise<Promise<void>> => {
 			try {
@@ -163,9 +172,9 @@ export class MemberResolver {
 
 				const result = await new Promise((resolve, reject) => {
 					stream
-						.pipe(createWriteStream(url))
+						.pipe(fs.createWriteStream(url))
 						.on('finish', () => resolve(true))
-						.on('error', () => reject(false));
+						.on('error', (err) => reject(new Error(err?.message || 'Upload failed')));
 				});
 				if (!result) throw new BadRequestException(Message.UPLOAD_FAILED);
 

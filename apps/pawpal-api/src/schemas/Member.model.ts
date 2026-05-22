@@ -10,6 +10,11 @@ const MemberSchema = new Schema(
 			default: MemberType.USER,
 		},
 
+		isPendingSpecialist: {
+			type: Boolean,
+			default: false,
+		},
+
 		memberStatus: {
 			type: String,
 			enum: MemberStatus,
@@ -55,6 +60,7 @@ const MemberSchema = new Schema(
 
 		memberDesc: {
 			type: String,
+			default: '',
 		},
 
 		memberListings: {

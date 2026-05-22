@@ -1,5 +1,5 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
-import { IsIn, IsNotEmpty, IsOptional, Length, Min } from 'class-validator';
+import { IsEnum, IsIn, IsNotEmpty, IsOptional, Length, Min } from 'class-validator';
 import { MemberAuthType, MemberStatus, MemberType } from '../../enums/member.enum';
 import { availableAgentSorts, availableMemberSorts } from '../../config';
 import { Direction } from '../../enums/common.enum';
@@ -7,7 +7,7 @@ import { Direction } from '../../enums/common.enum';
 @InputType()
 export class MemberInput {
 	@IsNotEmpty()
-	@Length(3, 12)
+	@Length(3, 16)
 	@Field(() => String)
 	memberNick: string;
 
@@ -21,18 +21,28 @@ export class MemberInput {
 	memberPhone: string;
 
 	@IsOptional()
+	@IsEnum(MemberType)
 	@Field(() => MemberType, { nullable: true })
 	memberType?: MemberType;
 
 	@IsOptional()
+	@Length(0, 1000)
+	@Field(() => String, { nullable: true })
+	memberDesc?: string;
+
+	@IsOptional()
 	@Field(() => MemberAuthType, { nullable: true })
 	memberAuthType?: MemberAuthType;
+
+	@IsOptional()
+	@Field(() => Boolean, { nullable: true })
+	isPendingSpecialist?: boolean;
 }
 
 @InputType()
 export class LoginInput {
 	@IsNotEmpty()
-	@Length(3, 12)
+	@Length(3, 16)
 	@Field(() => String)
 	memberNick: string;
 
@@ -87,6 +97,10 @@ class MISearch {
 	@IsOptional()
 	@Field(() => String, { nullable: true })
 	text?: string;
+
+	@IsOptional()
+	@Field(() => Boolean, { nullable: true })
+	isPendingSpecialist?: boolean;
 }
 
 @InputType()

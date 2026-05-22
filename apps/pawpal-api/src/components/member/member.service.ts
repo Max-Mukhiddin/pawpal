@@ -29,15 +29,33 @@ export class MemberService {
 	) {}
 
 	public async signup(input: MemberInput): Promise<Member> {
-		input.memberPassword = await this.authService.hashPassword(input.memberPassword);
+		const payload: T = { ...input };
+		payload.memberPassword = await this.authService.hashPassword(input.memberPassword);
+
+		if (input.isPendingSpecialist) {
+			payload.memberType = MemberType.AGENT;
+			payload.memberStatus = MemberStatus.PENDING;
+		}
+
 		try {
-			const result = await this.memberModel.create(input);
-			result.accessToken = await this.authService.createToken(result);
+			const result = await this.memberModel.create(payload);
+			if (result.memberStatus !== MemberStatus.PENDING) {
+				result.accessToken = await this.authService.createToken(result);
+			}
 
 			return result;
-		} catch (err) {
+		} catch (err: any) {
 			console.log('Error, Service.model:', err);
-			throw new BadRequestException(Message.USED_MEMBER_NICK_OR_PHONE);
+			if (err?.code === 11000) {
+				if (err.keyPattern?.memberNick) {
+					throw new BadRequestException(Message.DUPLICATE_MEMBER_NICK);
+				}
+				if (err.keyPattern?.memberPhone) {
+					throw new BadRequestException(Message.DUPLICATE_MEMBER_PHONE);
+				}
+				throw new BadRequestException(Message.DUPLICATE_ACCOUNT);
+			}
+			throw err;
 		}
 	}
 
@@ -49,6 +67,8 @@ export class MemberService {
 			throw new InternalServerErrorException(Message.NO_MEMBER_NICK);
 		} else if (response.memberStatus === MemberStatus.BLOCK) {
 			throw new InternalServerErrorException(Message.BLOCKED_USER);
+		} else if (response.memberStatus === MemberStatus.PENDING) {
+			throw new InternalServerErrorException(Message.PENDING_APPROVAL);
 		}
 
 		// TODO: Compare passwords
@@ -159,6 +179,9 @@ export class MemberService {
 		if (memberStatus) match.memberStatus = memberStatus;
 		if (memberType) match.memberType = memberType;
 		if (text) match.memberNick = { $regex: new RegExp(text, 'i') };
+		if (input.search.isPendingSpecialist !== undefined) {
+			match.isPendingSpecialist = input.search.isPendingSpecialist;
+		}
 		console.log('match:', match);
 
 		const result = await this.memberModel
