@@ -14,7 +14,7 @@ export class FollowResolver {
 	constructor(private readonly followService: FollowService) {}
 
 	@UseGuards(AuthGuard)
-	@Mutation((returns) => Follower)
+	@Mutation(() => Follower)
 	public async subscribe(@Args('input') input: string, @AuthMember('_id') memberId: ObjectId): Promise<Follower> {
 		console.log('Mutation: subscribe');
 		const followingId = shapeIntoMongoObjectId(input);
@@ -22,7 +22,7 @@ export class FollowResolver {
 	}
 
 	@UseGuards(AuthGuard)
-	@Mutation((returns) => Follower)
+	@Mutation(() => Follower)
 	public async unsubscribe(
 		@Args('input') input: string,
 		@AuthMember('_id') memberId: ObjectId, //
@@ -33,7 +33,7 @@ export class FollowResolver {
 	}
 
 	@UseGuards(WithoutGuard)
-	@Query((returns) => Followings)
+	@Query(() => Followings)
 	public async getMemberFollowings(
 		@Args('input') input: FollowInquiry,
 		@AuthMember('_id') memberId: ObjectId,
@@ -45,7 +45,7 @@ export class FollowResolver {
 	}
 
 	@UseGuards(WithoutGuard)
-	@Query((returns) => Followers)
+	@Query(() => Followers)
 	public async getMemberFollowers(
 		@Args('input') input: FollowInquiry,
 		@AuthMember('_id') memberId: ObjectId,

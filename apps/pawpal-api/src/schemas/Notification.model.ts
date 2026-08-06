@@ -30,29 +30,28 @@ const NotificationSchema = new Schema(
 			type: String,
 		},
 
-		authorId: {
-			type: Schema.Types.ObjectId,
-			required: true,
-			ref: 'Member',
-		},
-
 		receiverId: {
 			type: Schema.Types.ObjectId,
-			required: true,
 			ref: 'Member',
+			required: true,
+			index: true,
 		},
 
-		listingId: {
+		authorId: {
 			type: Schema.Types.ObjectId,
-			ref: 'Listing',
+			ref: 'Member',
+			required: true,
 		},
 
-		articleId: {
+		notificationRefId: {
 			type: Schema.Types.ObjectId,
-			ref: 'BoardArticle',
+			required: false,
 		},
 	},
 	{ timestamps: true, collection: 'notifications' },
 );
+
+NotificationSchema.index({ receiverId: 1, createdAt: -1 });
+NotificationSchema.index({ receiverId: 1, notificationStatus: 1 });
 
 export default NotificationSchema;

@@ -9,6 +9,10 @@ import { FollowModule } from './follow/follow.module';
 import { BoardArticleModule } from './board-article/board-article.module';
 import { InquiryModule } from './inquiry/inquiry.module';
 import { BookingModule } from './booking/booking.module';
+import { NotificationModule } from './notification/notification.module';
+import { NoticeModule } from './notice/notice.module';
+import { FaqModule } from './faq/faq.module';
+import { MessagingModule } from './messaging/messaging.module';
 
 @Module({
 	imports: [
@@ -22,6 +26,10 @@ import { BookingModule } from './booking/booking.module';
 		FollowModule,
 		InquiryModule,
 		BookingModule,
+		NotificationModule,
+		NoticeModule,
+		FaqModule,
+		MessagingModule,
 	],
 })
 export class ComponentsModule {}

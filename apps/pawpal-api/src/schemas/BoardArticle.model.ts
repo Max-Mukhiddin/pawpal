@@ -23,6 +23,7 @@ const BoardArticleSchema = new Schema(
 		articleContent: {
 			type: String,
 			required: true,
+			// Stores plain text or sanitized HTML (headings, lists, blockquotes, etc.)
 		},
 
 		articleImage: {

@@ -9,4 +9,3 @@ export enum BookingStatus {
 registerEnumType(BookingStatus, {
 	name: 'BookingStatus',
 });
-

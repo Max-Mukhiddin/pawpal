@@ -66,7 +66,7 @@ export class BookingResolver {
 		return await this.bookingService.updateBookingStatusByAgent(memberId, input);
 	}
 
-		@UseGuards(AuthGuard)
+	@UseGuards(AuthGuard)
 	@Mutation(() => Booking)
 	public async cancelMyBooking(
 		@Args('bookingId') input: string,

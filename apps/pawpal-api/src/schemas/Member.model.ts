@@ -1,6 +1,5 @@
 import { Schema } from 'mongoose';
 import { MemberAuthType, MemberStatus, MemberType } from '../libs/enums/member.enum';
-import { timestamp } from 'rxjs';
 
 const MemberSchema = new Schema(
 	{
@@ -111,6 +110,13 @@ const MemberSchema = new Schema(
 		},
 		deletedAt: {
 			type: Date,
+		},
+
+		/** conversationId (hex string) → last read timestamp for unread message counts */
+		conversationLastRead: {
+			type: Map,
+			of: Date,
+			default: {},
 		},
 	},
 	{ timestamps: true, collection: 'members' },

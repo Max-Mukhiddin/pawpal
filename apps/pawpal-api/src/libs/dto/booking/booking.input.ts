@@ -19,9 +19,9 @@ export class BookingInput {
 	customerId?: ObjectId;
 
 	@IsNotEmpty()
-@IsDate()
-@Field(() => Date)
-dateTime: Date;
+	@IsDate()
+	@Field(() => Date)
+	dateTime: Date;
 
 	@IsOptional()
 	@Length(1, 500)

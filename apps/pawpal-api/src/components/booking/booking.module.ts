@@ -23,4 +23,3 @@ import ListingSchema from '../../schemas/Listing.model';
 	providers: [BookingResolver, BookingService],
 })
 export class BookingModule {}
-

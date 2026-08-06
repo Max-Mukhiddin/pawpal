@@ -6,9 +6,15 @@ import { LikeInput } from '../../libs/dto/like/like.input';
 import { T } from '../../libs/types/common';
 import { Message } from '../../libs/enums/common.enum';
 import { OrdinaryInquiry } from '../../libs/dto/listing/listing.input';
-import { Listings } from '../../libs/dto/listing/listing';
+import { Listing, Listings } from '../../libs/dto/listing/listing';
 import { LikeGroup } from '../../libs/enums/like.enum';
 import { lookupFavorite } from '../../libs/config';
+import { TotalCounter } from '../../libs/dto/member/member';
+
+interface FavoriteListingsAggregation {
+	list: Array<{ favoriteListing: Listing }>;
+	metaCounter: TotalCounter[];
+}
 
 @Injectable()
 export class LikeService {
@@ -45,8 +51,8 @@ export class LikeService {
 		const { page, limit } = input;
 		const match: T = { likeGroup: LikeGroup.LISTING, memberId: memberId };
 
-		const data: T = await this.likeModel
-			.aggregate([
+		const data = await this.likeModel
+			.aggregate<FavoriteListingsAggregation>([
 				{ $match: match },
 				{ $sort: { updatedAt: -1 } },
 				{
@@ -71,8 +77,9 @@ export class LikeService {
 				},
 			])
 			.exec();
-		const result: Listings = { list: [], metaCounter: data[0].metaCounter };
-		result.list = data[0].list.map((ele) => ele.favoriteListing);
+		const facet = data[0] ?? { list: [], metaCounter: [] };
+		const result: Listings = { list: [], metaCounter: facet.metaCounter };
+		result.list = facet.list.map((ele) => ele.favoriteListing);
 		return result;
 	}
 }

@@ -40,4 +40,3 @@ const BookingSchema = new Schema(
 );
 
 export default BookingSchema;
-

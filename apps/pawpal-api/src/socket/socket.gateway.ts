@@ -18,6 +18,10 @@ interface InfoPayload {
 	action: string;
 }
 
+interface IncomingSocketRequest {
+	url?: string;
+}
+
 @WebSocketGateway({ transport: ['websocket'], secure: false })
 export class SocketGateway implements OnGatewayInit {
 	private logger: Logger = new Logger('SocketEvents');
@@ -29,22 +33,24 @@ export class SocketGateway implements OnGatewayInit {
 	@WebSocketServer()
 	server: Server;
 
+	// Nest OnGatewayInit requires the server argument; we only log client count.
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars -- interface contract
 	public afterInit(server: Server) {
 		this.logger.verbose(`WebSocket Server Initialized total [${this.summaryClient}]`);
 	}
 
-	private async retrieveAuth(req: any): Promise<Member> {
+	private async retrieveAuth(req: IncomingSocketRequest): Promise<Member> {
 		try {
-			const parseUrl = url.parse(req.url, true);
+			const parseUrl = url.parse(req.url ?? '', true);
 			const { token } = parseUrl.query;
 			console.log('token:', token);
 			return await this.authService.verifyToken(token as string);
-		} catch (err) {
+		} catch {
 			return null;
 		}
 	}
 
-	public async handleConnection(client: WebSocket, req: any) {
+	public async handleConnection(client: WebSocket, req: IncomingSocketRequest) {
 		const authMember = await this.retrieveAuth(req);
 		this.summaryClient++;
 		this.clientsAuthMap.set(client, authMember);
@@ -80,14 +86,14 @@ export class SocketGateway implements OnGatewayInit {
 	}
 
 	@SubscribeMessage('message')
-	public async handleMessage(client: WebSocket, payload: string): Promise<void> {
+	public handleMessage(client: WebSocket, payload: string): void {
 		const authMember = this.clientsAuthMap.get(client);
 		const newMessage: MessagePayload = { event: 'message', text: payload, memberData: authMember };
 		const clientNick: string = authMember?.memberNick ?? 'Guest';
 		this.logger.verbose(`NEW MESSAGE [${clientNick}]: ${payload}`);
 
 		this.messagesList.push(newMessage);
-		if(this.messagesList.length > 5) this.messagesList.splice(0, this.messagesList.length - 5)
+		if (this.messagesList.length > 5) this.messagesList.splice(0, this.messagesList.length - 5);
 
 		this.emitMessage(newMessage);
 	}

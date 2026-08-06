@@ -1,23 +1,27 @@
 import { Module } from '@nestjs/common';
 import { InjectConnection, MongooseModule } from '@nestjs/mongoose';
-import { Connection } from 'mongoose';
+import { Connection, ConnectionStates } from 'mongoose';
+
+type NodeEnv = 'development' | 'production' | 'test';
 
 @Module({
 	imports: [
 		MongooseModule.forRootAsync({
-			useFactory: () => ({
-				uri: process.env.NODE_ENV === 'production' ? process.env.MONGO_PROD : process.env.MONGO_DEV,
-			}),
+			useFactory: () => {
+				const nodeEnv = process.env.NODE_ENV as NodeEnv | undefined;
+				return {
+					uri: nodeEnv === 'production' ? process.env.MONGO_PROD : process.env.MONGO_DEV,
+				};
+			},
 		}),
 	],
 	exports: [MongooseModule],
 })
 export class DatabaseModule {
 	constructor(@InjectConnection() private readonly connection: Connection) {
-		if (connection.readyState === 1) {
-			console.log(
-				`MongoDB is connected info ${process.env.NODE_ENV === 'production' ? 'production' : 'development'} db`,
-			);
+		if (connection.readyState === ConnectionStates.connected) {
+			const nodeEnv = process.env.NODE_ENV as NodeEnv | undefined;
+			console.log(`MongoDB is connected info ${nodeEnv === 'production' ? 'production' : 'development'} db`);
 		} else {
 			console.log('DB is not connected!');
 		}

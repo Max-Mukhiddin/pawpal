@@ -6,6 +6,7 @@ import { BadRequestException, InternalServerErrorException, UseGuards } from '@n
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import type { ObjectId } from 'mongoose';
+import { Types } from 'mongoose';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { MemberType } from '../../libs/enums/member.enum';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -34,7 +35,7 @@ export class MemberResolver {
 
 	@UseGuards(AuthGuard)
 	@Query(() => String)
-	public async checkAuth(@AuthMember('memberNick') memberNick: string): Promise<string> {
+	public checkAuth(@AuthMember('memberNick') memberNick: string): string {
 		console.log('Query: checkAuth');
 		console.log('memberNick:', memberNick);
 		return `Hi ${memberNick}`;
@@ -43,9 +44,10 @@ export class MemberResolver {
 	@Roles(MemberType.USER, MemberType.AGENT)
 	@UseGuards(RolesGuard)
 	@Query(() => String)
-	public async checkAuthRoles(@AuthMember() authMember: Member): Promise<string> {
+	public checkAuthRoles(@AuthMember() authMember: Member): string {
 		console.log('Query: checkAuthRoles');
-		return `Hi ${authMember.memberNick}, you are ${authMember.memberType} (memberId: ${authMember._id})`;
+		const memberId = (authMember._id as unknown as Types.ObjectId).toHexString();
+		return `Hi ${authMember.memberNick}, you are ${authMember.memberType} (memberId: ${memberId})`;
 	}
 
 	@UseGuards(AuthGuard)
@@ -58,6 +60,17 @@ export class MemberResolver {
 		delete input._id;
 		return await this.memberService.updateMember(memberId, input);
 	}
+
+	@UseGuards(AuthGuard)
+	@Mutation(() => Member)
+	public async applyAsSpecialist(
+		@Args('memberDesc') memberDesc: string,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<Member> {
+		console.log('Mutation: applyAsSpecialist');
+		return await this.memberService.applyAsSpecialist(memberId, memberDesc);
+	}
+
 	@UseGuards(WithoutGuard)
 	@Query(() => Member)
 	public async getMember(
@@ -113,14 +126,15 @@ export class MemberResolver {
 	// IMAGE UPLOADER (member.resolver.ts)
 
 	@UseGuards(AuthGuard)
-	@Mutation((returns) => String)
+	@Mutation(() => String)
 	public async imageUploader(
 		@Args({ name: 'file', type: () => GraphQLUpload })
-		{ createReadStream, filename, mimetype }: FileUpload,
-		@Args('target') target: String,
+		file: FileUpload,
+		@Args('target') target: string,
 	): Promise<string> {
 		console.log('Mutation: imageUploader');
 
+		const { filename, mimetype } = file;
 		if (!filename) throw new BadRequestException(Message.UPLOAD_FAILED);
 		const validMime = validMimeTypes.includes(mimetype);
 		if (!validMime) throw new BadRequestException(Message.PROVIDE_ALLOWED_FORMAT);
@@ -131,12 +145,12 @@ export class MemberResolver {
 		if (!fs.existsSync(dir)) {
 			fs.mkdirSync(dir, { recursive: true });
 		}
-		const stream = createReadStream();
+		const stream = file.createReadStream();
 
 		const result = await new Promise((resolve, reject) => {
 			stream
 				.pipe(fs.createWriteStream(url))
-				.on('finish', async () => resolve(true))
+				.on('finish', () => resolve(true))
 				.on('error', (err) => reject(new Error(err?.message || 'Upload failed')));
 		});
 		if (!result) throw new InternalServerErrorException(Message.UPLOAD_FAILED);
@@ -145,11 +159,11 @@ export class MemberResolver {
 	}
 
 	@UseGuards(AuthGuard)
-	@Mutation((returns) => [String])
+	@Mutation(() => [String])
 	public async imagesUploader(
 		@Args('files', { type: () => [GraphQLUpload] })
 		files: Promise<FileUpload>[],
-		@Args('target') target: String,
+		@Args('target') target: string,
 	): Promise<string[]> {
 		console.log('Mutation: imagesUploader');
 
@@ -158,17 +172,18 @@ export class MemberResolver {
 			fs.mkdirSync(dir, { recursive: true });
 		}
 
-		const uploadedImages = [];
-		const promisedList = files.map(async (img: Promise<FileUpload>, index: number): Promise<Promise<void>> => {
+		const uploadedImages: string[] = [];
+		const promisedList = files.map(async (img: Promise<FileUpload>, index: number): Promise<void> => {
 			try {
-				const { filename, mimetype, encoding, createReadStream } = await img;
+				const file = await img;
+				const { filename, mimetype } = file;
 
 				const validMime = validMimeTypes.includes(mimetype);
 				if (!validMime) throw new BadRequestException(Message.PROVIDE_ALLOWED_FORMAT);
 
 				const imageName = getSerialForImage(filename);
 				const url = `uploads/${target}/${imageName}`;
-				const stream = createReadStream();
+				const stream = file.createReadStream();
 
 				const result = await new Promise((resolve, reject) => {
 					stream
@@ -179,7 +194,7 @@ export class MemberResolver {
 				if (!result) throw new BadRequestException(Message.UPLOAD_FAILED);
 
 				uploadedImages[index] = url;
-			} catch (err) {
+			} catch {
 				console.log('Error, file missing!');
 			}
 		});

@@ -1,0 +1,54 @@
+version: "3.3"
+services: 
+  pawpal-api:
+    container_name: pawpal-api
+    restart: always
+    image: node:20.10.0
+    ports:
+      - 4001:3007
+    volumes: 
+      - ./:/usr/src/pawpal
+    working_dir: /usr/src/pawpal
+
+    networks:
+      - monorepo_network
+
+# For production
+    command: bash -c "npm install && npm run build && npm run start:prod"
+
+
+
+  pawpal-batch:
+    container_name: pawpal-batch
+    restart: unless-stopped
+    image: node:20.10.0
+    ports:
+      - 4002:3008
+    volumes: 
+      - ./:/usr/src/pawpal
+    working_dir: /usr/src/pawpal
+
+    networks:
+      - monorepo_network
+
+# For production
+    command: bash -c "npm install && npm run build && npm run start:prod:batch"
+
+networks:
+  monorepo_network:
+    driver: bridge
+
+
+
+
+
+
+
+
+
+
+
+
+# pawpal-next localhost:4000 < => container:3000
+# pawpal-api localhost:4001 < => container:3007
+# pawpal-batch localhost:4002 < => container:3008

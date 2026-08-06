@@ -11,20 +11,29 @@ import { Direction, Message } from '../../libs/enums/common.enum';
 import { CommentUpdate } from '../../libs/dto/comment/comment.update';
 import { lookupMember } from '../../libs/config';
 import { T } from '../../libs/types/common';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationGroup, NotificationType } from '../../libs/enums/notification.enum';
+import { ListingStatus, ListingType } from '../../libs/enums/listing.enum';
+import { BoardArticleStatus } from '../../libs/enums/board-article.enum';
+import { Listing } from '../../libs/dto/listing/listing';
+import { BoardArticle } from '../../libs/dto/board-article/board-article';
 
 @Injectable()
 export class CommentService {
 	constructor(
 		@InjectModel('Comment') private readonly commentModel: Model<Comment>,
+		@InjectModel('Listing') private readonly listingModel: Model<Listing>,
+		@InjectModel('BoardArticle') private readonly boardArticleModel: Model<BoardArticle>,
 		private readonly memberService: MemberService,
 		private readonly listingService: ListingService,
 		private readonly boardArticleService: BoardArticleService,
+		private readonly notificationService: NotificationService,
 	) {}
 
 	public async createComment(memberId: ObjectId, input: CommentInput): Promise<Comment> {
 		input.memberId = memberId;
 
-		let result = null;
+		let result: Comment | null = null;
 		try {
 			result = await this.commentModel.create(input);
 		} catch (err) {
@@ -57,6 +66,61 @@ export class CommentService {
 		}
 
 		if (!result) throw new InternalServerErrorException(Message.CREATE_FAILED);
+
+		try {
+			const commenter = await this.memberService.getMember(null, memberId);
+			let receiverId: ObjectId | null = null;
+			let targetLabel = 'content';
+			let notificationGroup = NotificationGroup.MEMBER;
+
+			switch (input.commentGroup) {
+				case CommentGroup.LISTING: {
+					const listing = await this.listingModel
+						.findOne({ _id: input.commentRefId, listingStatus: ListingStatus.ACTIVE })
+						.select('memberId listingType')
+						.lean()
+						.exec();
+					if (listing) {
+						receiverId = listing.memberId;
+						targetLabel = listing.listingType === ListingType.SERVICE ? 'service' : 'product';
+						notificationGroup = NotificationGroup.LISTING;
+					}
+					break;
+				}
+				case CommentGroup.ARTICLE: {
+					const article = await this.boardArticleModel
+						.findOne({ _id: input.commentRefId, articleStatus: BoardArticleStatus.ACTIVE })
+						.select('memberId')
+						.lean()
+						.exec();
+					if (article) {
+						receiverId = article.memberId;
+						targetLabel = 'article';
+						notificationGroup = NotificationGroup.ARTICLE;
+					}
+					break;
+				}
+				case CommentGroup.MEMBER:
+					receiverId = input.commentRefId;
+					targetLabel = 'profile';
+					notificationGroup = NotificationGroup.MEMBER;
+					break;
+			}
+
+			if (receiverId) {
+				await this.notificationService.createNotification({
+					notificationType: NotificationType.COMMENT,
+					notificationGroup,
+					notificationTitle: `${commenter.memberNick} commented on your ${targetLabel}`,
+					receiverId,
+					authorId: memberId,
+					notificationRefId: input.commentRefId,
+				});
+			}
+		} catch (err) {
+			console.log('Error, NotificationService (createComment):', err);
+		}
+
 		return result;
 	}
 
@@ -84,8 +148,8 @@ export class CommentService {
 		const match: T = { commentRefId: commentRefId, commentStatus: CommentStatus.ACTIVE };
 		const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
 
-		const result: Comments[] = await this.commentModel
-			.aggregate([
+		const result = await this.commentModel
+			.aggregate<Comments>([
 				{ $match: match },
 				{ $sort: sort },
 				{

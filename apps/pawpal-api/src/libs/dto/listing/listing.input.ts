@@ -196,4 +196,3 @@ export class OrdinaryInquiry {
 	@Field(() => Int)
 	limit: number;
 }
-

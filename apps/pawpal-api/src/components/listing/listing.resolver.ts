@@ -1,7 +1,13 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { ListingService } from './listing.service';
 import { Listings, Listing } from '../../libs/dto/listing/listing';
-import { AgentListingsInquiry, AllListingsInquiry, OrdinaryInquiry, ListingsInquiry, ListingInput } from '../../libs/dto/listing/listing.input';
+import {
+	AgentListingsInquiry,
+	AllListingsInquiry,
+	OrdinaryInquiry,
+	ListingsInquiry,
+	ListingInput,
+} from '../../libs/dto/listing/listing.input';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { MemberType } from '../../libs/enums/member.enum';
 import { AuthGuard } from '../auth/guards/auth.guard';
@@ -31,11 +37,8 @@ export class ListingResolver {
 	}
 
 	@UseGuards(WithoutGuard)
-	@Query((returns) => Listing)
-	public async getListing(
-		@Args('listingId') input: string,
-		@AuthMember('_id') memberId: ObjectId,
-	): Promise<Listing> {
+	@Query(() => Listing)
+	public async getListing(@Args('listingId') input: string, @AuthMember('_id') memberId: ObjectId): Promise<Listing> {
 		console.log('Query: getListing');
 		const listingId = shapeIntoMongoObjectId(input);
 		return await this.listingService.getListing(memberId, listingId);
@@ -54,7 +57,7 @@ export class ListingResolver {
 	}
 
 	@UseGuards(WithoutGuard)
-	@Query((returns) => Listings)
+	@Query(() => Listings)
 	public async getListings(
 		@Args('input') input: ListingsInquiry,
 		@AuthMember('_id') memberId: ObjectId,
@@ -64,7 +67,7 @@ export class ListingResolver {
 	}
 
 	@UseGuards(AuthGuard)
-	@Query((returns) => Listings)
+	@Query(() => Listings)
 	public async getFavorites(
 		@Args('input') input: OrdinaryInquiry,
 		@AuthMember('_id') memberId: ObjectId,
@@ -74,7 +77,7 @@ export class ListingResolver {
 	}
 
 	@UseGuards(AuthGuard)
-	@Query((returns) => Listings)
+	@Query(() => Listings)
 	public async getVisited(
 		@Args('input') input: OrdinaryInquiry,
 		@AuthMember('_id') memberId: ObjectId,
@@ -85,7 +88,7 @@ export class ListingResolver {
 
 	@Roles(MemberType.AGENT)
 	@UseGuards(RolesGuard)
-	@Query((returns) => Listings)
+	@Query(() => Listings)
 	public async getAgentListings(
 		@Args('input') input: AgentListingsInquiry,
 		@AuthMember('_id') memberId: ObjectId,
@@ -108,11 +111,8 @@ export class ListingResolver {
 	// ADMIN ***
 	@Roles(MemberType.ADMIN)
 	@UseGuards(RolesGuard)
-	@Query((returns) => Listings)
-	public async getAllListingsByAdmin(
-		@Args('input') input: AllListingsInquiry,
-		@AuthMember('_id') memberId: ObjectId,
-	): Promise<Listings> {
+	@Query(() => Listings)
+	public async getAllListingsByAdmin(@Args('input') input: AllListingsInquiry): Promise<Listings> {
 		console.log('Query: getAllListingsByAdmin');
 		return await this.listingService.getAllListingsByAdmin(input);
 	}
@@ -135,4 +135,3 @@ export class ListingResolver {
 		return await this.listingService.removeListingByAdmin(listingId);
 	}
 }
-

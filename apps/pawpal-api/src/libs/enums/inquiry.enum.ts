@@ -8,4 +8,3 @@ export enum InquiryStatus {
 registerEnumType(InquiryStatus, {
 	name: 'InquiryStatus',
 });
-

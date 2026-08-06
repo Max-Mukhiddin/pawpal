@@ -7,6 +7,7 @@ import { ViewModule } from '../view/view.module';
 import ListingSchema from '../../schemas/Listing.model';
 import { MemberModule } from '../member/member.module';
 import { LikeModule } from '../like/like.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
 	imports: [
@@ -15,9 +16,9 @@ import { LikeModule } from '../like/like.module';
 		ViewModule,
 		MemberModule,
 		LikeModule,
+		NotificationModule,
 	],
 	providers: [ListingResolver, ListingService],
 	exports: [ListingService],
 })
 export class ListingModule {}
-

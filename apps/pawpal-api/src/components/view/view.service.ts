@@ -5,9 +5,15 @@ import { View } from '../../libs/dto/view/view';
 import { ViewInput } from '../../libs/dto/view/view.input';
 import { T } from '../../libs/types/common';
 import { ViewGroup } from '../../libs/enums/view.enum';
-import { Listings } from '../../libs/dto/listing/listing';
+import { Listings, Listing } from '../../libs/dto/listing/listing';
 import { OrdinaryInquiry } from '../../libs/dto/listing/listing.input';
 import { lookupVisit } from '../../libs/config';
+import { TotalCounter } from '../../libs/dto/member/member';
+
+interface VisitedListingsAggregation {
+	list: Array<{ visitedListing: Listing }>;
+	metaCounter: TotalCounter[];
+}
 
 @Injectable()
 export class ViewService {
@@ -31,8 +37,8 @@ export class ViewService {
 		const { page, limit } = input;
 		const match: T = { viewGroup: ViewGroup.LISTING, memberId: memberId };
 
-		const data: T = await this.viewModel
-			.aggregate([
+		const data = await this.viewModel
+			.aggregate<VisitedListingsAggregation>([
 				{ $match: match },
 				{ $sort: { updatedAt: -1 } },
 				{
@@ -57,8 +63,9 @@ export class ViewService {
 				},
 			])
 			.exec();
-		const result: Listings = { list: [], metaCounter: data[0].metaCounter };
-		result.list = data[0].list.map((ele) => ele.visitedListing);
+		const facet = data[0] ?? { list: [], metaCounter: [] };
+		const result: Listings = { list: [], metaCounter: facet.metaCounter };
+		result.list = facet.list.map((ele) => ele.visitedListing);
 		return result;
 	}
 }

@@ -90,4 +90,3 @@ const ListingSchema = new Schema(
 ListingSchema.index({ listingType: 1, listingLocation: 1, listingTitle: 1, listingPrice: 1 }, { unique: true });
 
 export default ListingSchema;
-

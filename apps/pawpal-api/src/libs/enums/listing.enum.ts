@@ -31,4 +31,3 @@ export enum ListingLocation {
 registerEnumType(ListingLocation, {
 	name: 'ListingLocation',
 });
-

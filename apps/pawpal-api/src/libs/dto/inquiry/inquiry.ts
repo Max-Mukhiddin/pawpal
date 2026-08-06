@@ -1,4 +1,4 @@
-import { Field, Int, ObjectType } from '@nestjs/graphql';
+import { Field, ObjectType } from '@nestjs/graphql';
 import type { ObjectId } from 'mongoose';
 import { InquiryStatus } from '../../enums/inquiry.enum';
 import { Member, TotalCounter } from '../member/member';
@@ -59,4 +59,3 @@ export class Inquiries {
 	@Field(() => [TotalCounter], { nullable: true })
 	metaCounter: TotalCounter[];
 }
-

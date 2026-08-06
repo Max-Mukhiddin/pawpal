@@ -18,6 +18,9 @@ import { lookupAuthMemberLiked, lookupMember, shapeIntoMongoObjectId } from '../
 import { LikeService } from '../like/like.service';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationGroup, NotificationType } from '../../libs/enums/notification.enum';
+import { sanitizeArticleContent } from '../../libs/utils/article-content';
 
 @Injectable()
 export class BoardArticleService {
@@ -26,10 +29,12 @@ export class BoardArticleService {
 		private readonly memberService: MemberService,
 		private readonly viewService: ViewService,
 		private readonly likeService: LikeService,
+		private readonly notificationService: NotificationService,
 	) {}
 
 	public async createBoardArticle(memberId: ObjectId, input: BoardArticleInput): Promise<BoardArticle> {
 		input.memberId = memberId;
+		input.articleContent = sanitizeArticleContent(input.articleContent);
 		try {
 			const result = await this.boardArticleModel.create(input);
 			await this.memberService.memberStatsEditor({
@@ -64,7 +69,7 @@ export class BoardArticleService {
 
 			// meLiked
 
-			const likeInput: LikeInput = {memberId, likeRefId: articleId, likeGroup: LikeGroup.ARTICLE};
+			const likeInput: LikeInput = { memberId, likeRefId: articleId, likeGroup: LikeGroup.ARTICLE };
 			targetBoardArticle.meLiked = await this.likeService.checkLikeExistence(likeInput);
 		}
 
@@ -74,6 +79,10 @@ export class BoardArticleService {
 
 	public async updateBoardArticle(memberId: ObjectId, input: BoardArticleUpdate): Promise<BoardArticle> {
 		const { _id, articleStatus } = input;
+
+		if (input.articleContent !== undefined) {
+			input.articleContent = sanitizeArticleContent(input.articleContent);
+		}
 
 		const result = await this.boardArticleModel
 			.findOneAndUpdate({ _id: _id, memberId: memberId, articleStatus: BoardArticleStatus.ACTIVE }, input, {
@@ -108,7 +117,7 @@ export class BoardArticleService {
 		console.log('match:', match);
 
 		const result = await this.boardArticleModel
-			.aggregate([
+			.aggregate<BoardArticles>([
 				{ $match: match },
 				{ $sort: sort },
 				{
@@ -116,7 +125,7 @@ export class BoardArticleService {
 						list: [
 							{ $skip: (input.page - 1) * input.limit },
 							{ $limit: input.limit },
-						lookupAuthMemberLiked(memberId),
+							lookupAuthMemberLiked(memberId),
 							lookupMember,
 							{ $unwind: '$memberData' },
 						],
@@ -131,7 +140,9 @@ export class BoardArticleService {
 	}
 
 	public async likeTargetBoardArticle(memberId: ObjectId, likeRefId: ObjectId): Promise<BoardArticle> {
-		const target = this.boardArticleModel.findOne({ _id: likeRefId, articleStatus: BoardArticleStatus.ACTIVE }).exec();
+		const target = await this.boardArticleModel
+			.findOne({ _id: likeRefId, articleStatus: BoardArticleStatus.ACTIVE })
+			.exec();
 		if (!target) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
 		const input: LikeInput = {
@@ -149,6 +160,22 @@ export class BoardArticleService {
 
 		if (!result) throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
 
+		if (modifier === 1) {
+			try {
+				const liker = await this.memberService.getMember(null, memberId);
+				await this.notificationService.createNotification({
+					notificationType: NotificationType.LIKE,
+					notificationGroup: NotificationGroup.ARTICLE,
+					notificationTitle: `${liker.memberNick} liked your article "${target.articleTitle}"`,
+					receiverId: target.memberId,
+					authorId: memberId,
+					notificationRefId: likeRefId,
+				});
+			} catch (err) {
+				console.log('Error, NotificationService (likeTargetBoardArticle):', err);
+			}
+		}
+
 		return result;
 	}
 
@@ -161,7 +188,7 @@ export class BoardArticleService {
 		if (articleCategory) match.articleCategory = articleCategory;
 
 		const result = await this.boardArticleModel
-			.aggregate([
+			.aggregate<BoardArticles>([
 				{ $match: match },
 				{ $sort: sort },
 				{
@@ -184,6 +211,10 @@ export class BoardArticleService {
 
 	public async updateBoardArticleByAdmin(input: BoardArticleUpdate): Promise<BoardArticle> {
 		const { _id, articleStatus } = input;
+
+		if (input.articleContent !== undefined) {
+			input.articleContent = sanitizeArticleContent(input.articleContent);
+		}
 
 		const result = await this.boardArticleModel
 			.findByIdAndUpdate({ _id: _id, articleStatus: BoardArticleStatus.ACTIVE }, input, {

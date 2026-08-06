@@ -13,4 +13,3 @@ export class BookingUpdateStatus {
 	@Field(() => BookingStatus, { nullable: true })
 	bookingStatus?: BookingStatus;
 }
-

@@ -1,6 +1,17 @@
-import { ObjectId } from 'bson';
+import { ObjectId as BsonObjectId } from 'bson';
+import type { ObjectId as MongooseObjectId } from 'mongoose';
 
-export const availableAgentSorts = ['createdAt', 'updatedAt', 'memberLikes', 'memberViews', 'memberRank'];
+export const availableAgentSorts = [
+	'createdAt',
+	'updatedAt',
+	'memberLikes',
+	'memberViews',
+	'memberRank',
+	'specialistScore',
+	'totalEngagement',
+	'jobsCount',
+	'articlesCount',
+];
 export const availableMemberSorts = ['createdAt', 'updatedAt', 'memberLikes', 'memberViews'];
 
 export const availableListingSorts = [
@@ -19,7 +30,6 @@ export const availableCommentSorts = ['createdAt', 'updatedAt'];
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
 import { T } from './types/common';
-import { pipeline } from 'stream';
 
 export const validMimeTypes = ['image/png', 'image/jpg', 'image/jpeg'];
 export const getSerialForImage = (filename: string) => {
@@ -27,8 +37,12 @@ export const getSerialForImage = (filename: string) => {
 	return uuidv4() + ext;
 };
 
-export const shapeIntoMongoObjectId = (target: any) => {
-	return typeof target === 'string' ? new ObjectId(target) : target;
+/** Accept GraphQL string ids or existing ObjectId values; always return a mongoose-typed ObjectId. */
+export const shapeIntoMongoObjectId = (target: string | MongooseObjectId | BsonObjectId): MongooseObjectId => {
+	if (typeof target === 'string') {
+		return new BsonObjectId(target) as unknown as MongooseObjectId;
+	}
+	return target as unknown as MongooseObjectId;
 };
 
 export const lookupAuthMemberLiked = (memberId: T, targetRefId: string = '$_id') => {
@@ -108,6 +122,15 @@ export const lookupMember = {
 	},
 };
 
+export const lookupAuthor = {
+	$lookup: {
+		from: 'members',
+		localField: 'authorId',
+		foreignField: '_id',
+		as: 'authorData',
+	},
+};
+
 export const lookupListing = {
 	$lookup: {
 		from: 'listings',
@@ -135,7 +158,6 @@ export const lookupFollowerData = {
 	},
 };
 
-
 export const lookupFavorite = {
 	$lookup: {
 		from: 'members',
@@ -153,4 +175,3 @@ export const lookupVisit = {
 		as: 'visitedListing.memberData',
 	},
 };
-

@@ -71,7 +71,7 @@ export class AgentsInquiry {
 	limit: number;
 
 	@IsOptional()
-	@IsIn(availableAgentSorts) // ✅ FIXED
+	@IsIn(availableAgentSorts)
 	@Field(() => String, { nullable: true })
 	sort?: string;
 

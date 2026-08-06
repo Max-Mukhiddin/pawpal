@@ -13,4 +13,3 @@ export class InquiryUpdateStatus {
 	@Field(() => InquiryStatus, { nullable: true })
 	inquiryStatus?: InquiryStatus;
 }
-

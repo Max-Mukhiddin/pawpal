@@ -44,7 +44,7 @@ export class InquiryService {
 		this.shapeMatchQuery(match, input);
 
 		const result = await this.inquiryModel
-			.aggregate([
+			.aggregate<Inquiries>([
 				{ $match: match },
 				{ $sort: sort },
 				{
@@ -100,7 +100,7 @@ export class InquiryService {
 		this.shapeMatchQuery(match, input);
 
 		const result = await this.inquiryModel
-			.aggregate([
+			.aggregate<Inquiries>([
 				{ $match: match },
 				{ $sort: sort },
 				{

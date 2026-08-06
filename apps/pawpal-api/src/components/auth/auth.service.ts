@@ -1,9 +1,14 @@
-import { Injectable, Controller } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { Member } from '../../libs/dto/member/member';
 import { JwtService } from '@nestjs/jwt';
 import { T } from '../../libs/types/common';
 import { shapeIntoMongoObjectId } from '../../libs/config';
+
+type MemberWithDoc = Member & {
+	_doc?: Record<string, unknown>;
+	[key: string]: unknown;
+};
 
 @Injectable()
 export class AuthService {
@@ -20,8 +25,10 @@ export class AuthService {
 
 	public async createToken(member: Member): Promise<string> {
 		const payload: T = {};
-		Object.keys(member['_doc'] ? member['_doc'] : member).map((ele) => {
-			payload[`${ele}`] = member[`${ele}`];
+		const memberRecord = member as MemberWithDoc;
+		const source: Record<string, unknown> = memberRecord['_doc'] ? memberRecord['_doc'] : memberRecord;
+		Object.keys(source).map((ele) => {
+			payload[`${ele}`] = source[`${ele}`];
 		});
 		delete payload.memberPassword;
 		console.log('payload:', payload);
@@ -30,7 +37,7 @@ export class AuthService {
 	}
 
 	public async verifyToken(token: string): Promise<Member> {
-		const member = await this.jwtService.verifyAsync(token);
+		const member = await this.jwtService.verifyAsync<Member>(token);
 		member._id = shapeIntoMongoObjectId(member._id);
 		return member;
 	}

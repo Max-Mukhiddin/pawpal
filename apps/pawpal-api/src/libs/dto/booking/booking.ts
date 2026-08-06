@@ -53,4 +53,3 @@ export class Bookings {
 	@Field(() => [TotalCounter], { nullable: true })
 	metaCounter: TotalCounter[];
 }
-

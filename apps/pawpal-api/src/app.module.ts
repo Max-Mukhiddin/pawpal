@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
@@ -7,30 +8,43 @@ import { ApolloDriver } from '@nestjs/apollo';
 import { AppResolver } from './app.resolver';
 import { ComponentsModule } from './components/components.module';
 import { DatabaseModule } from './database/database.module';
-import { T } from './libs/types/common';
 import { SocketModule } from './socket/socket.module';
+import { AiChatModule } from './components/ai-chat/ai-chat.module';
+import { GraphQLError, GraphQLFormattedError } from 'graphql';
+
+interface GraphQLErrorExtensions {
+	code?: string;
+	exception?: { responce?: { message?: string | string[] } };
+	responce?: { message?: string | string[] };
+}
 
 @Module({
 	imports: [
 		ConfigModule.forRoot(),
+		ThrottlerModule.forRoot({
+			// Applied only where ThrottlerGuard is used (currently POST /ai-chat).
+			throttlers: [{ name: 'default', ttl: 60000, limit: 10 }],
+			errorMessage: 'Too many requests, please wait a moment and try again',
+		}),
 		GraphQLModule.forRoot({
 			driver: ApolloDriver,
 			playground: true,
 			uploads: false,
 			autoSchemaFile: true,
-			formatError: (error: T) => {
+			formatError: (error: GraphQLError): GraphQLFormattedError => {
+				const extensions = error.extensions as GraphQLErrorExtensions | undefined;
 				const graphqlFormattedError = {
-					code: error?.extensions.code,
-					message:
-						error?.extensions?.exception?.responce?.message || error?.extensions?.responce?.message || error?.message,
+					code: extensions?.code,
+					message: extensions?.exception?.responce?.message || extensions?.responce?.message || error.message,
 				};
 				console.log('GRAPHQL GLOBAL ERR:', graphqlFormattedError);
-				return graphqlFormattedError;
+				return graphqlFormattedError as GraphQLFormattedError;
 			},
 		}),
 		ComponentsModule,
 		DatabaseModule,
 		SocketModule,
+		AiChatModule,
 	],
 	controllers: [AppController],
 	providers: [AppService, AppResolver],

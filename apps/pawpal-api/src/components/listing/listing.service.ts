@@ -15,12 +15,14 @@ import { StatisticModifier, T } from '../../libs/types/common';
 import { ViewGroup } from '../../libs/enums/view.enum';
 import { ViewService } from '../view/view.service';
 import { ListingStatus, ListingType } from '../../libs/enums/listing.enum';
-const moment = require('moment');
+import * as moment from 'moment';
 import { ListingUpdate } from '../../libs/dto/listing/listing.update';
 import { lookupAuthMemberLiked, lookupMember, shapeIntoMongoObjectId } from '../../libs/config';
 import { LikeService } from '../like/like.service';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationGroup, NotificationType } from '../../libs/enums/notification.enum';
 
 @Injectable()
 export class ListingService {
@@ -29,6 +31,7 @@ export class ListingService {
 		private memberService: MemberService,
 		private viewService: ViewService,
 		private likeService: LikeService,
+		private notificationService: NotificationService,
 	) {}
 
 	public async createListing(input: ListingInput): Promise<Listing> {
@@ -106,7 +109,8 @@ export class ListingService {
 			input.durationMinutes = null;
 		}
 
-		let { listingStatus, soldAt, deletedAt } = input;
+		const { listingStatus } = input;
+		let { soldAt, deletedAt } = input;
 		const search: T = {
 			_id: input._id,
 			memberId: memberId,
@@ -141,7 +145,7 @@ export class ListingService {
 		this.shapeMatchQuery(match, input);
 
 		const result = await this.listingModel
-			.aggregate([
+			.aggregate<Listings>([
 				{ $match: match },
 				{ $sort: sort },
 				{
@@ -195,7 +199,7 @@ export class ListingService {
 		const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
 
 		const result = await this.listingModel
-			.aggregate([
+			.aggregate<Listings>([
 				{ $match: match },
 				{ $sort: sort },
 				{
@@ -217,7 +221,7 @@ export class ListingService {
 	}
 
 	public async likeTargetListing(memberId: ObjectId, likeRefId: ObjectId): Promise<Listing> {
-		const target = this.listingModel.findOne({ _id: likeRefId, listingStatus: ListingStatus.ACTIVE }).exec();
+		const target = await this.listingModel.findOne({ _id: likeRefId, listingStatus: ListingStatus.ACTIVE }).exec();
 		if (!target) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
 		const input: LikeInput = {
@@ -231,6 +235,22 @@ export class ListingService {
 
 		if (!result) throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
 
+		if (modifier === 1) {
+			try {
+				const liker = await this.memberService.getMember(null, memberId);
+				await this.notificationService.createNotification({
+					notificationType: NotificationType.LIKE,
+					notificationGroup: NotificationGroup.LISTING,
+					notificationTitle: `${liker.memberNick} liked your ${target.listingType}`,
+					receiverId: target.memberId,
+					authorId: memberId,
+					notificationRefId: likeRefId,
+				});
+			} catch (err) {
+				console.log('Error, NotificationService (likeTargetListing):', err);
+			}
+		}
+
 		return result;
 	}
 
@@ -243,7 +263,7 @@ export class ListingService {
 		if (listingLocationList) match.listingLocation = { $in: listingLocationList };
 
 		const result = await this.listingModel
-			.aggregate([
+			.aggregate<Listings>([
 				{ $match: match },
 				{ $sort: sort },
 				{
@@ -265,7 +285,8 @@ export class ListingService {
 	}
 
 	public async updateListingByAdmin(input: ListingUpdate): Promise<Listing> {
-		let { listingStatus, soldAt, deletedAt } = input;
+		const { listingStatus } = input;
+		let { soldAt, deletedAt } = input;
 		const search = {
 			_id: input._id,
 			listingStatus: ListingStatus.ACTIVE,
@@ -295,4 +316,3 @@ export class ListingService {
 		return result;
 	}
 }
-

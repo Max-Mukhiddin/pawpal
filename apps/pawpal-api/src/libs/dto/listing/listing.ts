@@ -80,4 +80,3 @@ export class Listings {
 	@Field(() => [TotalCounter], { nullable: true })
 	metaCounter: TotalCounter[];
 }
-
