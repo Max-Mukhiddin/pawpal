@@ -16,7 +16,7 @@ services:
       - monorepo_network
 
 # For production
-    command: bash -c "npm install && npm run build && npm run start:prod"
+    command: bash -c "rm -rf dist && npm install && npm run build && npm run start:prod"
 
 
 
