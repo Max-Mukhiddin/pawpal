@@ -8,9 +8,10 @@ import { graphqlUploadExpress } from 'graphql-upload';
 import * as express from 'express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import * as fs from 'fs';
+import { validUploadTargets } from './libs/config';
 
 async function bootstrap() {
-	for (const dir of ['uploads/member', 'uploads/listing', 'uploads/article']) {
+	for (const dir of validUploadTargets.map((target) => `uploads/${target}`)) {
 		if (!fs.existsSync(dir)) {
 			fs.mkdirSync(dir, { recursive: true });
 		}

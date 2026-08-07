@@ -11,7 +11,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { MemberType } from '../../libs/enums/member.enum';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { MemberUpdate } from '../../libs/dto/member/member.update';
-import { getSerialForImage, shapeIntoMongoObjectId, validMimeTypes } from '../../libs/config';
+import { getSerialForImage, isValidUploadTarget, shapeIntoMongoObjectId, validMimeTypes } from '../../libs/config';
 import { WithoutGuard } from '../auth/guards/without.guard';
 import { GraphQLUpload, FileUpload } from 'graphql-upload';
 import * as fs from 'fs';
@@ -134,6 +134,8 @@ export class MemberResolver {
 	): Promise<string> {
 		console.log('Mutation: imageUploader');
 
+		if (!isValidUploadTarget(target)) throw new BadRequestException(Message.PROVIDE_ALLOWED_TARGET);
+
 		const { filename, mimetype } = file;
 		if (!filename) throw new BadRequestException(Message.UPLOAD_FAILED);
 		const validMime = validMimeTypes.includes(mimetype);
@@ -166,6 +168,8 @@ export class MemberResolver {
 		@Args('target') target: string,
 	): Promise<string[]> {
 		console.log('Mutation: imagesUploader');
+
+		if (!isValidUploadTarget(target)) throw new BadRequestException(Message.PROVIDE_ALLOWED_TARGET);
 
 		const dir = `uploads/${target}`;
 		if (!fs.existsSync(dir)) {

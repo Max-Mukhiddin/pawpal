@@ -32,6 +32,14 @@ import * as path from 'path';
 import { T } from './types/common';
 
 export const validMimeTypes = ['image/png', 'image/jpg', 'image/jpeg'];
+
+/** Folders under uploads/ that clients may write to. Anything else is rejected. */
+export const validUploadTargets = ['member', 'listing', 'article', 'board'] as const;
+export type UploadTarget = (typeof validUploadTargets)[number];
+
+export const isValidUploadTarget = (target: string): target is UploadTarget =>
+	(validUploadTargets as readonly string[]).includes(target);
+
 export const getSerialForImage = (filename: string) => {
 	const ext = path.parse(filename).ext;
 	return uuidv4() + ext;
