@@ -22,13 +22,13 @@ interface GraphQLErrorExtensions {
 	imports: [
 		ConfigModule.forRoot(),
 		ThrottlerModule.forRoot({
-			// Applied only where ThrottlerGuard is used (currently POST /ai-chat).
 			throttlers: [{ name: 'default', ttl: 60000, limit: 10 }],
 			errorMessage: 'Too many requests, please wait a moment and try again',
 		}),
 		GraphQLModule.forRoot({
 			driver: ApolloDriver,
 			playground: true,
+			introspection: process.env.GRAPHQL_INTROSPECTION === 'true',
 			uploads: false,
 			autoSchemaFile: true,
 			formatError: (error: GraphQLError): GraphQLFormattedError => {

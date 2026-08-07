@@ -1,9 +1,11 @@
-version: "3.3"
+
 services: 
   pawpal-api:
     container_name: pawpal-api
     restart: always
     image: node:24.19.0
+    env_file:
+      - .env
     ports:
       - 4001:3007
     volumes: 
@@ -22,6 +24,8 @@ services:
     container_name: pawpal-batch
     restart: unless-stopped
     image: node:24.19.0
+    env_file:
+      - .env
     ports:
       - 4002:3008
     volumes: 
@@ -37,18 +41,3 @@ services:
 networks:
   monorepo_network:
     driver: bridge
-
-
-
-
-
-
-
-
-
-
-
-
-# pawpal-next localhost:4000 < => container:3000
-# pawpal-api localhost:4001 < => container:3007
-# pawpal-batch localhost:4002 < => container:3008
