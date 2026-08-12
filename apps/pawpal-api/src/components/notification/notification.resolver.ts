@@ -1,4 +1,4 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { Notification, Notifications } from '../../libs/dto/notification/notification';
@@ -49,5 +49,19 @@ export class NotificationResolver {
 		console.log('Mutation: deleteNotification');
 		const notificationId = shapeIntoMongoObjectId(input);
 		return await this.notificationService.deleteNotification(memberId, notificationId);
+	}
+
+	@UseGuards(AuthGuard)
+	@Mutation(() => Int)
+	public async clearReadNotifications(@AuthMember('_id') memberId: ObjectId): Promise<number> {
+		console.log('Mutation: clearReadNotifications');
+		return await this.notificationService.clearReadNotifications(memberId);
+	}
+
+	@UseGuards(AuthGuard)
+	@Mutation(() => Int)
+	public async clearAllNotifications(@AuthMember('_id') memberId: ObjectId): Promise<number> {
+		console.log('Mutation: clearAllNotifications');
+		return await this.notificationService.clearAllNotifications(memberId);
 	}
 }

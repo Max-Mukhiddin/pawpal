@@ -117,4 +117,25 @@ export class NotificationService {
 
 		return result;
 	}
+
+	public async clearReadNotifications(memberId: ObjectId): Promise<number> {
+		const result = await this.notificationModel
+			.deleteMany({
+				receiverId: memberId,
+				notificationStatus: NotificationStatus.READ,
+			})
+			.exec();
+
+		return result.deletedCount ?? 0;
+	}
+
+	public async clearAllNotifications(memberId: ObjectId): Promise<number> {
+		const result = await this.notificationModel
+			.deleteMany({
+				receiverId: memberId,
+			})
+			.exec();
+
+		return result.deletedCount ?? 0;
+	}
 }
